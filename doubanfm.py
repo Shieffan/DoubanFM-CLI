@@ -28,7 +28,7 @@ class DoubanFM_CLI:
         bus = self.player.get_bus()
         bus.add_signal_watch()
         bus.connect("message", self.on_message)
-        self.ch = 'http://douban.fm/j/mine/playlist?type=p&sid=&channel='+channel
+        self.ch = 'http://douban.fm/j/mine/playlist?type=n&channel='+channel+'&from=mainsite'
 
     def on_message(self, bus, message):
         t = message.type
@@ -72,7 +72,11 @@ class DoubanFM_CLI:
     def start(self):
         self.get_songlist()
         is_first_song = True
-        for r in self.songlist:
+        while 1:
+            if len(self.songlist) == 0 :
+                self.get_songlist()
+           
+            r = self.songlist.pop()
             song_uri = r['url']
             self.playmode = True
 
@@ -124,6 +128,12 @@ class Channel:
     def get_id_and_name(self):
         print 'Fetching channel list ...'
         # this var should name to text or string or something
+        cf = ConfigParser.ConfigParser()    
+        cf.read("doubanfm.config")   
+        channels = cf.items("CHANNEL")
+        if len(channels) > 0:
+          for key,val in channels:
+            self.info[key] = val 
         self.html = urllib2.urlopen(self.url).read()
         chls = json.loads(self.html)["data"]["channel"]["creator"]["chls"]
         for chl in chls:
